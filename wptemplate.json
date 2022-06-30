@@ -1,0 +1,208 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "subscriptionId": {
+      "type": "String"
+    },
+    "resourceGroupName": {
+      "type": "String"
+    },
+    "resourceName": {
+      "type": "String"
+    },
+    "kind": {
+      "type": "String",
+      "defaultvalue": "WordPress"
+    },
+    "location": {
+      "type": "String",
+      "defaultvalue": "eastus2"
+    },
+    "tags": {
+      "type": "Object",
+      "defaultvalue": {}
+    },
+    "appLocation": {
+      "type": "String",
+      "defaultvalue": "eastus"
+    },
+    "deploymentSize": {
+      "type": "String",
+      "defaultvalue": "Small"
+    },
+    "controllerSkuName": {
+      "type": "String",
+      "defaultvalue": "Standard_DS1_v2"
+    },
+    "sshPublicKey": {
+      "type": "String",
+      "defaultvalue": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCtSFazrepxG1IeUiYsuJ0BuTi6aRIZQidWYzQxHx4Rvbvv31g4MAnFH4Ou6AbE6DinITfsmn/fwQwMbHzPTvyuxJadDYmAl/8TzEUiGlcq7lgtnZGpN+/InP6mDq8QfxBBKClVwUuajF0bZG90TD+DtnuQebbwO0lxgJ2vMZB34NL1l2DMBRgXlLIOgbCOVier50MJ/zMjMO8EUKSygb1Bd6PfaKkx3qJqCkOZMh+077oOlio5Ugo8T6ovRyZDYs2GRoQrxMJHSRsBrmJZePqQTWtX2GPK3KSHVzDBiJ9gaLokN5HmugUsL8nd/e5r1L14Lk3JjCdx5enT/u7t/eFytTtx7tl+4BhEUpavwoGjuBHErMyXmWLTkFZvhfkHfE5dTJTnyjjmZrDpReuakYhHtKZwovMKolH1kEymnGagER+FTKf9rM/qbFSztdRpyx7EP4NyF5dnTU2HqoIa+W1jqXsugAv0RCun2iRum4Kt+zF4slwBpsMSA8qcTiIeoQU= generated-by-azure"
+
+    },
+    "adminUsername": {
+      "type": "String",
+      "defaultvalue": "azureuser"
+    },
+    "webNodesSkuname": {
+      "type": "String",
+      "defaultvalue": "php-vmss-"
+    },
+    "webNodesku": {
+      "type": "String",
+      "defaultvalue": "Standard_F2s"
+    },
+    "vmOSDiskType": {
+      "type": "String",
+      "defaultvalue": "Standard_LRS"
+    },
+    "autoScaleMinCount": {
+      "type": "Int",
+      "defaultvalue": 1
+    },
+    "autoScaleMaxCount": {
+      "type": "Int",
+      "defaultvalue": 2
+    },
+    "controllervmOSDiskType": {
+      "type": "String",
+      "defaultvalue": "Standard_LRS"
+    },
+    "serverName": {
+      "type": "String",
+      "defaultvalue": "php-dbserver-"
+    },
+    "dbObject": {
+      "type": "Object",
+      "defaultvalue": {
+        "serverEdition": "Burstable",
+        "vmName": "Standard_B1ms",
+        "vCores": "1",
+        "haEnabled": "Disabled",
+        "selectedIOPS": "640",
+        "storageSizeInGiB": "64",
+        "backupRetentionDays": "7"
+      }
+    },
+    "loadBalancerType": {
+      "type": "String",
+      "defaultvalue": "LoadBalancer"
+    },
+    "loadBalancerSku": {
+      "type": "String",
+      "defaultvalue": "Standard"
+    },
+    "azureFrontDoorEnabled": {
+      "type": "String",
+      "defaultvalue": "Enabled"
+    },
+    "fileshareType": {
+      "type": "String",
+      "defaultvalue": "NfsOnController"
+    },
+    "filestorageType": {
+      "type": "String",
+      "defaultvalue": "Premium_LRS"
+    },
+    "fileshareSizeInGB": {
+      "type": "Int",
+      "defaultvalue": 256
+    },
+    "cacheName": {
+      "type": "String",
+      "defaultvalue": ""
+    },
+    "cacheSkuName": {
+      "type": "String",
+      "defaultvalue": ""
+    },
+    "cacheFamily": {
+      "type": "String",
+      "defaultvalue": ""
+    },
+    "cacheCapacity": {
+      "type": "Int",
+      "defaultvalue": 0
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Workloads/phpworkloads",
+      "apiVersion": "2021-12-01-preview",
+      "name": "[parameters('resourceName')]",
+      "location": "[parameters('location')]",
+      "tags": "[parameters('tags')]",
+      "sku": {
+        "name": "[parameters('deploymentSize')]"
+      },
+      "kind": "[parameters('kind')]",
+      "properties": {
+        "appLocation": "[parameters('appLocation')]",
+        "managedResourceGroupConfiguration": {
+          "name": "[concat('php-', parameters('resourceName'),'-', uniqueString(resourceGroup().id))]"
+        },
+        "adminUserProfile": {
+          "userName": "[parameters('adminUsername')]",
+          "sshPublicKey": "[parameters('sshPublicKey')]"
+        },
+        "webNodesProfile": {
+          "name": "[concat(parameters('webNodesSkuname'), uniqueString(deployment().name))]",
+          "nodeSku": "[parameters('webNodesku')]",
+          "osImage": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "18.04-LTS",
+            "version": "latest"
+          },
+          "osDisk": {
+            "storageType": "[parameters('VmOsDiskType')]",
+            "sizeInGB": 127
+          },
+          "autoScaleMinCount": "[parameters('autoScaleMinCount')]",
+          "autoScaleMaxCount": "[parameters('autoScaleMaxCount')]"
+        },
+        "controllerProfile": {
+          "name": "controller-vm",
+          "nodeSku": "[parameters('controllerSkuName')]",
+          "osImage": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "18.04-LTS",
+            "version": "latest"
+          },
+          "osDisk": {
+            "storageType": "[parameters('controllervmOsDiskType')]",
+            "sizeInGB": 127
+          }
+        },
+        "networkProfile": {
+          "loadBalancerType": "[parameters('loadBalancerType')]",
+          "loadBalancerSku": "[parameters('loadBalancerSku')]",
+          "azureFrontDoorEnabled": "[parameters('azureFrontDoorEnabled')]"
+        },
+        "databaseProfile": {
+          "type": "MySql",
+          "serverName": "[concat(parameters('serverName'), uniqueString(deployment().name))]",
+          "sku": "[parameters('dbObject').vmName]",
+          "tier": "[parameters('dbObject').serverEdition]",
+          "haEnabled": "[parameters('dbObject').haEnabled]",
+          "storageInGB": "[int(parameters('dbObject').storageSizeInGiB)]",
+          "storageIops": "[int(parameters('dbObject').selectedIOPS)]",
+          "backupRetentionDays": "[int(parameters('dbObject').backupRetentionDays)]"
+        },
+        "fileshareProfile": {
+          "shareType": "[parameters('fileshareType')]",
+          "storageType": "[parameters('filestorageType')]",
+          "shareSizeInGB": "[parameters('fileshareSizeInGB')]"
+        },
+        "phpProfile": {
+          "version": "7.4"
+        },
+        "cacheProfile": "[if(equals(parameters('cacheSkuName'), ''), null(), createObject('name', parameters('cacheName'), 'skuName', parameters('cacheSkuName'), 'family', parameters('cacheFamily'), 'capacity', int(parameters('cacheCapacity'))))]",
+        "backupProfile": {
+          "backupEnabled": "Disabled"
+        }
+      }
+    }
+  ]
+}
